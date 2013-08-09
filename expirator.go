@@ -5,7 +5,6 @@ package gotimeout
 
 import (
 	"encoding/gob"
-	"github.com/golang/glog"
 	"os"
 	"time"
 )
@@ -74,7 +73,6 @@ func (e *Expirator) loadExpirations() {
 	for _, v := range tempMap {
 		e.registerExpirationHandle(v)
 	}
-	glog.Info("Loaded ", len(tempMap), " expirations.")
 }
 
 func (e *Expirator) saveExpirations() {
@@ -88,7 +86,6 @@ func (e *Expirator) saveExpirations() {
 
 	file, err := os.Create(e.dataPath)
 	if err != nil {
-		glog.Error("Error writing expiration data: ", err.Error())
 		return
 	}
 
@@ -96,7 +93,6 @@ func (e *Expirator) saveExpirations() {
 	gobEncoder.Encode(e.expirationMap)
 
 	file.Close()
-	glog.Info("Wrote ", len(e.expirationMap), " expirations.")
 
 	e.flushRequired, e.urgentFlushRequired = false, false
 }
@@ -110,7 +106,6 @@ func (e *Expirator) registerExpirationHandle(ex *expirationHandle) {
 
 	if ex.expirationTimer != nil {
 		e.cancelExpirationHandle(ex)
-		glog.Info("Existing expiration for ", ex.ID, " cancelled")
 	}
 
 	now := time.Now()
@@ -119,9 +114,7 @@ func (e *Expirator) registerExpirationHandle(ex *expirationHandle) {
 		e.urgentFlushRequired = true
 
 		ex.expirationTimer = time.AfterFunc(ex.ExpirationTime.Sub(now), expiryFunc)
-		glog.Info("Registered expiration for ", ex.ID, " at ", ex.ExpirationTime)
 	} else {
-		glog.Warning("Force-expiring handle ", ex.ID, ", outdated by ", now.Sub(ex.ExpirationTime), ".")
 		expiryFunc()
 	}
 }
@@ -131,12 +124,10 @@ func (e *Expirator) cancelExpirationHandle(ex *expirationHandle) {
 	delete(e.expirationMap, ex.ID)
 	e.urgentFlushRequired = true
 
-	glog.Info("Execution order for ", ex.ID, " belayed.")
 }
 
 func (e *Expirator) run() {
 	go e.loadExpirations()
-	glog.Info("Launching Expirator.")
 	var flushTickerChan, urgentFlushTickerChan <-chan time.Time
 	if e.canSave() {
 		flushTickerChan, urgentFlushTickerChan = time.NewTicker(30*time.Second).C, time.NewTicker(1*time.Second).C
@@ -154,7 +145,6 @@ func (e *Expirator) run() {
 				e.saveExpirations()
 			}
 		case expiration := <-e.expirationChannel:
-			glog.Info("Expiring ", expiration.ID)
 			expirable, _ := e.store.GetExpirable(expiration.ID)
 
 			delete(e.expirationMap, expiration.ID)
