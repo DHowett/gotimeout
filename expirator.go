@@ -1,3 +1,6 @@
+// Package gotimeout provides a facility for expiring objects after a set period of time.
+// It is meant to be used in a manner not dissimilar from a daemon - the key difference
+// being that it runs in a goroutine as part of your process.
 package gotimeout
 
 import (
@@ -7,6 +10,7 @@ import (
 	"time"
 )
 
+// ExpirableID provides Opaque identification for an Expirable object.
 type ExpirableID string
 
 type expirationHandle struct {
@@ -15,6 +19,7 @@ type expirationHandle struct {
 	expirationTimer *time.Timer
 }
 
+// Expirator provides the primary mechanism of gotimeout: an expiration daemon.
 type Expirator struct {
 	store               ExpirableStore
 	dataPath            string
@@ -24,6 +29,7 @@ type Expirator struct {
 	urgentFlushRequired bool
 }
 
+// Expirable represents any object that might be expired.
 type Expirable interface {
 	ExpirationID() ExpirableID
 }
@@ -33,6 +39,9 @@ type ExpirableStore interface {
 	DestroyExpirable(Expirable)
 }
 
+// NewExpirator returns a new Expirator given a store and location to which to serialize expiration metadata.
+// path may be "", denoting that this Expirator should not save anything. The returned expiration daemon will have
+// already been started.
 func NewExpirator(path string, store ExpirableStore) *Expirator {
 	e := &Expirator{
 		store:             store,
@@ -159,6 +168,7 @@ func (e *Expirator) run() {
 	}
 }
 
+// ExpireObject registers an object for expiration after a given duration.
 func (e *Expirator) ExpireObject(ex Expirable, dur time.Duration) {
 	id := ex.ExpirationID()
 	exh, ok := e.expirationMap[id]
@@ -169,6 +179,7 @@ func (e *Expirator) ExpireObject(ex Expirable, dur time.Duration) {
 	e.registerExpirationHandle(exh)
 }
 
+// CancelObjectExpiration stays the execution of an object, or does nothing if the given object was not going to be executed.
 func (e *Expirator) CancelObjectExpiration(ex Expirable) {
 	id := ex.ExpirationID()
 	exh, ok := e.expirationMap[id]
@@ -177,6 +188,7 @@ func (e *Expirator) CancelObjectExpiration(ex Expirable) {
 	}
 }
 
+// ObjectHasExpiration returns whether the given object has a registered expiration.
 func (e *Expirator) ObjectHasExpiration(ex Expirable) bool {
 	id := ex.ExpirationID()
 	_, ok := e.expirationMap[id]
