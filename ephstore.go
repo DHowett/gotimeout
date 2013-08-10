@@ -48,12 +48,12 @@ func (e *EphemeralKeyValueStore) Delete(k string) {
 	delete(e.values, k)
 }
 
-func (e *EphemeralKeyValueStore) GetExpirable(id ExpirableID) (Expirable, error) {
+func (e *EphemeralKeyValueStore) GetExpirable(id ExpirableID) Expirable {
 	_, ok := e.values[string(id)]
 	if !ok {
-		return nil, nil
+		return nil
 	}
-	return ephemeralExpirationProxy(id), nil
+	return ephemeralExpirationProxy(id)
 }
 
 func (e *EphemeralKeyValueStore) DestroyExpirable(ex Expirable) {

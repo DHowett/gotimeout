@@ -34,7 +34,7 @@ type Expirable interface {
 }
 
 type ExpirableStore interface {
-	GetExpirable(ExpirableID) (Expirable, error)
+	GetExpirable(ExpirableID) Expirable
 	DestroyExpirable(Expirable)
 }
 
@@ -145,11 +145,9 @@ func (e *Expirator) run() {
 				e.saveExpirations()
 			}
 		case expiration := <-e.expirationChannel:
-			expirable, _ := e.store.GetExpirable(expiration.ID)
-
 			delete(e.expirationMap, expiration.ID)
 
-			if expirable != nil {
+			if expirable := e.store.GetExpirable(expiration.ID); expirable != nil {
 				e.store.DestroyExpirable(expirable)
 			}
 
