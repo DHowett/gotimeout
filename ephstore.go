@@ -4,26 +4,26 @@ import (
 	"time"
 )
 
-// EphemeralStoreValue represents any value which may be stored in an EphemeralKeyValueStore.
-type EphemeralStoreValue interface{}
+// MapValue represents any value which may be stored in an Map.
+type MapValue interface{}
 
-// EphemeralKeyValueStore provides an expiring key-value store whose contents are not saved to disk.
+// Map provides an expiring key-value store whose contents are not saved to disk.
 // It acts in a manner not dissimilar from a map.
-type EphemeralKeyValueStore struct {
+type Map struct {
 	expirator *Expirator
-	values    map[string]EphemeralStoreValue
+	values    map[string]MapValue
 }
 
-type ephemeralExpirationProxy ExpirableID
+type expirationProxy ExpirableID
 
-func (e ephemeralExpirationProxy) ExpirationID() ExpirableID {
+func (e expirationProxy) ExpirationID() ExpirableID {
 	return ExpirableID(e)
 }
 
-// NewEphemeralKeyValueStore returns a new EphemeralKeyValueStore whose expiration daemon is already running.
-func NewEphemeralKeyValueStore() *EphemeralKeyValueStore {
-	v := &EphemeralKeyValueStore{
-		values: make(map[string]EphemeralStoreValue),
+// NewMap returns a new Map whose expiration daemon is already running.
+func NewMap() *Map {
+	v := &Map{
+		values: make(map[string]MapValue),
 	}
 
 	v.expirator = NewExpirator("", v)
@@ -31,31 +31,31 @@ func NewEphemeralKeyValueStore() *EphemeralKeyValueStore {
 }
 
 // Put places the given object into the key-value store and queues its expiration.
-func (e *EphemeralKeyValueStore) Put(k string, v EphemeralStoreValue, lifespan time.Duration) {
+func (e *Map) Put(k string, v MapValue, lifespan time.Duration) {
 	e.values[k] = v
-	e.expirator.ExpireObject(ephemeralExpirationProxy(k), lifespan)
+	e.expirator.ExpireObject(expirationProxy(k), lifespan)
 }
 
 // Get returns the object referred to by the given key.
-func (e *EphemeralKeyValueStore) Get(k string) (v EphemeralStoreValue, ok bool) {
+func (e *Map) Get(k string) (v MapValue, ok bool) {
 	v, ok = e.values[k]
 	return
 }
 
 // Delete removes the object referred to by the given key from the key-value store and stays its execution.
-func (e *EphemeralKeyValueStore) Delete(k string) {
-	e.expirator.CancelObjectExpiration(ephemeralExpirationProxy(k))
+func (e *Map) Delete(k string) {
+	e.expirator.CancelObjectExpiration(expirationProxy(k))
 	delete(e.values, k)
 }
 
-func (e *EphemeralKeyValueStore) GetExpirable(id ExpirableID) Expirable {
+func (e *Map) GetExpirable(id ExpirableID) Expirable {
 	_, ok := e.values[string(id)]
 	if !ok {
 		return nil
 	}
-	return ephemeralExpirationProxy(id)
+	return expirationProxy(id)
 }
 
-func (e *EphemeralKeyValueStore) DestroyExpirable(ex Expirable) {
+func (e *Map) DestroyExpirable(ex Expirable) {
 	delete(e.values, string(ex.ExpirationID()))
 }
