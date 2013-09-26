@@ -210,3 +210,12 @@ func (e *Expirator) ObjectHasExpiration(ex Expirable) bool {
 	_, ok := e.expirationMap[id]
 	return ok
 }
+
+// Len returns the number of objects registered for expiration.
+func (e *Expirator) Len() (l int) {
+	l = 0
+	if e.expirationMap != nil {
+		l = len(e.expirationMap)
+	}
+	return
+}
