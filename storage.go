@@ -7,14 +7,14 @@ import (
 
 // StorageAdapter is the interface through which expiration storage is abstracted.
 //
-// Save stores a set of expiration handles, and Load returns them unharmed.
+// SaveExpirationHandles stores a set of expiration handles, and LoadExpirationHandles returns them unharmed.
 //
 // Implementation that care about saving their changes in a timely manner should
 // return true from RequiresFlush.
 type StorageAdapter interface {
 	RequiresFlush() bool
-	Save(*HandleMap) error
-	Load() (*HandleMap, error)
+	SaveExpirationHandles(*HandleMap) error
+	LoadExpirationHandles() (*HandleMap, error)
 }
 
 // GobFileAdapter is a StorageAdapter that saves expiration handles in a file via the encoding/gob package.
@@ -26,7 +26,7 @@ func (a *GobFileAdapter) RequiresFlush() bool {
 	return true
 }
 
-func (a *GobFileAdapter) Save(hm *HandleMap) error {
+func (a *GobFileAdapter) SaveExpirationHandles(hm *HandleMap) error {
 	file, err := os.Create(a.filename)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (a *GobFileAdapter) Save(hm *HandleMap) error {
 	return nil
 }
 
-func (a *GobFileAdapter) Load() (*HandleMap, error) {
+func (a *GobFileAdapter) LoadExpirationHandles() (*HandleMap, error) {
 	file, err := os.Open(a.filename)
 	if err != nil {
 		return nil, err
@@ -66,9 +66,9 @@ func (NoopAdapter) RequiresFlush() bool {
 	return false
 }
 
-func (NoopAdapter) Save(*HandleMap) error {
+func (NoopAdapter) SaveExpirationHandles(*HandleMap) error {
 	return nil
 }
-func (NoopAdapter) Load() (*HandleMap, error) {
+func (NoopAdapter) LoadExpirationHandles() (*HandleMap, error) {
 	return nil, nil
 }

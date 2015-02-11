@@ -10,8 +10,8 @@ type legacyUpgradingGobFileAdapter struct {
 	*GobFileAdapter
 }
 
-func (a *legacyUpgradingGobFileAdapter) Load() (*HandleMap, error) {
-	hm, err := a.GobFileAdapter.Load()
+func (a *legacyUpgradingGobFileAdapter) LoadExpirationHandles() (*HandleMap, error) {
+	hm, err := a.GobFileAdapter.LoadExpirationHandles()
 	if err == nil {
 		return hm, err
 	}

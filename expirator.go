@@ -122,7 +122,7 @@ func NewExpiratorWithStorage(sa StorageAdapter, store ExpirableStore) *Expirator
 }
 
 func (e *Expirator) loadExpirations() error {
-	hm, err := e.adapter.Load()
+	hm, err := e.adapter.LoadExpirationHandles()
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (e *Expirator) saveExpirations() error {
 	if e.expirationMap == nil {
 		return nil
 	}
-	err := e.adapter.Save(e.expirationMap)
+	err := e.adapter.SaveExpirationHandles(e.expirationMap)
 	if err != nil {
 		return err
 	}
